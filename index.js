@@ -26,11 +26,11 @@ const exerciseSchema = new mongoose.Schema({
   description: { type: String, required: true },
   duration: { type: Number, required: true },
   date: String
-},{ _id: false });
+}, { _id: false });
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   log: [exerciseSchema] //array of exerciseSchema
-},{versionKey: false});
+}, { versionKey: false });
 
 
 const Session = mongoose.model('Session', exerciseSchema);
@@ -65,19 +65,18 @@ app.get('/api/users', (req, res) => { //get all users
 
 
 app.post('/api/users/:_id/exercises', bodyParser.urlencoded({ extended: false }), (req, res) => { //add exercise to user
-  let datex = req.body.date;
-  if(req.body.date === '' || req.body.date === null){
-    datex = new Date().toDateString();
+  let newSession = new Session({ description: req.body.description, duration: req.body.duration, date: req.body.date });
+  if (newSession.date === '' || newSession.date === undefined) {
+    newSession.date = new Date().toDateString();
   }
-  let newSession = new Session({ description: req.body.description, duration: req.body.duration, date: datex });
   User.findByIdAndUpdate(req.params._id, { $push: { log: newSession } }, { new: true }, (err, data) => { //find user by id and update log array with new session
     //$push adds newSession to the log array
     if (!err) {
       let userObj = {}; //create user object
       userObj['_id'] = data._id;
       userObj['username'] = data.username;
-      userObj['date'] = new Date(newSession.date).toDateString()
-      userObj['duration'] =  parseInt(newSession.duration);
+      userObj['date'] = new Date(newSession.date).toDateString();
+      userObj['duration'] = parseInt(newSession.duration);
       userObj['description'] = newSession.description;
       res.json(userObj); //return user object
     }
@@ -97,6 +96,25 @@ app.get('/api/users/:_id/logs', (req, res) => { //get user's exercise log
       userObj['username'] = data.username;
       userObj['log'] = data.log;
       userObj['count'] = data.log.length;
+      if (req.query.from || req.query.to) {
+        let fromDate = new Date(0);
+        let toDate = new Date();
+        if (req.query.from) {
+          fromDate = new Date(req.query.from);
+        }
+        if (req.query.to) {
+          toDate = new Date(req.query.to);
+        }
+        fromDate = fromDate.getTime();
+        toDate = toDate.getTime();
+        userObj['log'] = data.log.filter((session) => {
+          let sessionDate = new Date(session.date).getTime();
+          return sessionDate >= fromDate && sessionDate <= toDate;
+        })
+      }
+      if (req.query.limit) {
+        userObj['log'] = data.log.slice(0, req.query.limit);
+      }
       res.json(userObj);
     }
     else {
