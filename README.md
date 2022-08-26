@@ -1,3 +1,13 @@
 # Exercise Tracker
 
-This is the boilerplate for the Exercise Tracker project. Instructions for building your project can be found at https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker
+Solution to FCC Backend Development and APIs Challenge
+
+## Description:
+Allows to store username and multiple exercises for that username which can be retrieved when required.
+
+## Tech Used:
+- Node.js
+- Express js
+- MongoDB
+- Mongoose
+- NPM packages
